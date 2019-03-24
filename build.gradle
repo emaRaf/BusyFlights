@@ -28,10 +28,10 @@ targetCompatibility = 1.8
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-web")
     testCompile("junit:junit")
-     testCompile("org.springframework.boot:spring-boot-starter-test")
+    testCompile("org.springframework.boot:spring-boot-starter-test")
 }
 
 
-task deployApi(dependsOn: build, type: Exec) {
-     commandLine "java", "-jar", "build/libs/gs-spring-boot-0.1.0.jar"
+task deployApiDevelopment(dependsOn: build, type: Exec) {
+     commandLine "java", "-jar", "-Dspring.profiles.active=development", "build/libs/gs-spring-boot-0.1.0.jar"
 }
