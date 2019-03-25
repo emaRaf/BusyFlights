@@ -1,4 +1,4 @@
-package hello;
+package busyflight.controller;
 
 import java.util.TreeSet;
 
@@ -16,11 +16,6 @@ public class BusyFlightController {
     private ServiceFactory serviceFactory;
 
     @RequestMapping("/busyFlights")
-    public String index() {
-	return "Greetings from BusyFlightController";
-    }
-
-    @RequestMapping("/busyFlights/flights")
     public TreeSet<Flight> flights() {
 	return serviceFactory.createFlightService().collectFlights();
     }
