@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 public class ServiceFactory {
 
     public CardService createCardService() {
-	System.out.print("creating card serrvice");
 	return new CardService();
     }
 }

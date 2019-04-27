@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import lz.dao.CardDAO;
 import lz.dao.Dao;
 import lz.model.Card;
+import lz.model.Cards;
 
 @Scope(value = "session")
 @Component(value = "todoService")
@@ -16,6 +18,16 @@ public class CardService {
     @Autowired
     private Dao<Card> todoDao;
     private Card todo = new Card();
+
+    private final CardDAO cardDao;
+
+    public CardService(CardDAO cardDao) {
+	this.cardDao = cardDao;
+    }
+
+    public CardService() {
+	this(new CardDAO());
+    }
 
     public void save() {
 	todoDao.save(todo);
@@ -37,5 +49,13 @@ public class CardService {
 
     public Card getTodo() {
 	return todo;
+    }
+
+    public void createCard(Card card) {
+	cardDao.addCard(card);
+    }
+
+    public Cards getCards() {
+	return cardDao.getCards();
     }
 }
