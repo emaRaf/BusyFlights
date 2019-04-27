@@ -1,38 +1,38 @@
 package lz.model;
 
+import java.util.Date;
+
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-//@Entity
-public class Card {
-    public Card() {
+import com.fasterxml.jackson.annotation.JsonFormat;
 
+//@Entity
+public class Card implements Comparable<Card> {
+    public Card() {
     }
 
-    public Card(String bankName, String cardNumber, String expiryDate) {
+    public Card(String bankName, String cardNumber, Date expiryDate) {
 	this.bankName = bankName;
 	this.cardNumber = cardNumber;
 	this.expiryDate = expiryDate;
     }
 
-    // @NotBlank(message = "Name is mandatory")
-    @NotBlank(message = "username can't empty!")
-    @NotNull(message = "Name is mandatory")
+    @NotBlank(message = "bankName can't be empty!")
+    @NotNull(message = "bankName is mandatory")
     @Size(min = 2, max = 30)
     private String bankName;
 
-    // @Id
-    @NotBlank(message = "username can't empty!")
+    @NotBlank(message = "cardNumber can't be empty!")
     @NotNull(message = "cardNumber is mandatory")
-    @Size(min = 2, max = 30)
+    @Pattern(regexp = "([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{4})")
     private String cardNumber;
 
-    @NotBlank(message = "username can't empty!")
-    // @NotBlank(message = "Date is mandatory")
-    @NotNull(message = "Date is mandatory")
-    @Size(min = 2, max = 30)
-    private String expiryDate;
+    @NotNull(message = "expiryDate is mandatory")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MMM-yyyy")
+    private Date expiryDate;
 
     public String getBankName() {
 	return bankName;
@@ -50,11 +50,11 @@ public class Card {
 	this.cardNumber = cardNumber;
     }
 
-    public String getExpiryDate() {
+    public Date getExpiryDate() {
 	return expiryDate;
     }
 
-    public void setExpiryDate(String expiryDate) {
+    public void setExpiryDate(Date expiryDate) {
 	this.expiryDate = expiryDate;
     }
 
@@ -63,4 +63,54 @@ public class Card {
 	return "Card [bankName=" + bankName + ", cardNumber=" + cardNumber + ", expiryDate=" + expiryDate + "]";
     }
 
+    @Override
+    public int compareTo(Card card) {
+	return card.getExpiryDate().compareTo(expiryDate);
+    }
+
+    @Override
+    public int hashCode() {
+	final int prime = 31;
+	int result = 1;
+	result = prime * result + (bankName == null ? 0 : bankName.hashCode());
+	result = prime * result + (cardNumber == null ? 0 : cardNumber.hashCode());
+	result = prime * result + (expiryDate == null ? 0 : expiryDate.hashCode());
+	return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+	if (this == obj) {
+	    return true;
+	}
+	if (obj == null) {
+	    return false;
+	}
+	if (getClass() != obj.getClass()) {
+	    return false;
+	}
+	final Card other = (Card) obj;
+	if (bankName == null) {
+	    if (other.bankName != null) {
+		return false;
+	    }
+	} else if (!bankName.equals(other.bankName)) {
+	    return false;
+	}
+	if (cardNumber == null) {
+	    if (other.cardNumber != null) {
+		return false;
+	    }
+	} else if (!cardNumber.equals(other.cardNumber)) {
+	    return false;
+	}
+	if (expiryDate == null) {
+	    if (other.expiryDate != null) {
+		return false;
+	    }
+	} else if (!expiryDate.equals(other.expiryDate)) {
+	    return false;
+	}
+	return true;
+    }
 }

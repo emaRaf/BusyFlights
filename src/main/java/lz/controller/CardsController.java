@@ -5,8 +5,15 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,11 +29,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import lz.dao.CardDAO;
 import lz.exception.CardException;
 import lz.model.Card;
-import lz.model.Cards;
+import lz.model.CardsResponse;
 import lz.model.Result;
+import lz.service.CardMaskerService;
 import lz.service.CardService;
 import lz.service.ServiceFactory;
 
@@ -35,14 +42,31 @@ import lz.service.ServiceFactory;
 public class CardsController {
 
     @Autowired
-    private CardDAO cardDao;
-
-    @Autowired
     private ServiceFactory serviceFactory;
 
     @GetMapping(path = "/", produces = "application/json")
-    public Cards getEmployees() {
-	return serviceFactory.createCardService().getCards();
+    public CardsResponse getEmployees(HttpServletRequest request) {
+
+	List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+	if (messages == null) {
+	    messages = new ArrayList<>();
+	    request.getSession().setAttribute("MY_SESSION_MESSAGES", messages);
+	}
+	messages.add("new");
+	request.getSession().setAttribute("MY_SESSION_MESSAGES", messages);
+
+	System.out.println("session messages");
+	messages.forEach(System.out::println);
+
+	final List<Card> cards = serviceFactory.createCardService().getCards();
+	return createCardResponse(cards);
+    }
+
+    private CardsResponse createCardResponse(final List<Card> cards) {
+	final CardMaskerService cardMaskerService = serviceFactory.createCardMaskerService();
+
+	return new CardsResponse(
+		cards.stream().map(cardMaskerService::maskCard).collect(Collectors.toCollection(TreeSet<Card>::new)));
     }
 
     @PostMapping(path = "/", consumes = "application/json", produces = "application/json")
@@ -110,6 +134,21 @@ public class CardsController {
 	return "redirect:/uploadStatus";
     }
 
+    @PostMapping("/destroy")
+    public String destroySession(HttpServletRequest request) {
+
+	System.out.println("clearing session");
+	final List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+	messages.forEach(System.out::println);
+	request.getSession().invalidate();
+	System.out.println("cleeared session");
+	final List<String> messagesAfter = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+
+	// messagesAfter.forEach(System.out::println);
+
+	return "redirect:/";
+    }
+
     /*
      * public void readCsv() { final String csvFile =
      * "/Users/mkyong/csv/country.csv"; String line = ""; final String cvsSplitBy =
@@ -141,7 +180,12 @@ public class CardsController {
 	    if (recordAttributes.length != attributeCount) {
 		return null;
 	    } else {
-		return new Card(recordAttributes[0], recordAttributes[1], recordAttributes[2]);
+		final DateFormat format = new SimpleDateFormat("MMM-yyyy");
+		try {
+		    return new Card(recordAttributes[0], recordAttributes[1], format.parse(recordAttributes[2]));
+		} catch (final ParseException e) {
+		    throw new CardException("invalid date");
+		}
 	    }
 	}
     }

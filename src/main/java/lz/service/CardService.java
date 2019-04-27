@@ -1,6 +1,7 @@
 package lz.service;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Component;
 import lz.dao.CardDAO;
 import lz.dao.Dao;
 import lz.model.Card;
-import lz.model.Cards;
 
 @Scope(value = "session")
 @Component(value = "todoService")
@@ -53,9 +53,10 @@ public class CardService {
 
     public void createCard(Card card) {
 	cardDao.addCard(card);
+
     }
 
-    public Cards getCards() {
+    public List<Card> getCards() {
 	return cardDao.getCards();
     }
 }

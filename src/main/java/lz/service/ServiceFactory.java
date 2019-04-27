@@ -8,4 +8,8 @@ public class ServiceFactory {
     public CardService createCardService() {
 	return new CardService();
     }
+
+    public CardMaskerService createCardMaskerService() {
+	return new CardMaskerService();
+    }
 }
