@@ -17,6 +17,8 @@ public class BusyFlightController {
 
     @RequestMapping("/busyFlights")
     public TreeSet<Flight> flights() {
+
 	return serviceFactory.createFlightService().collectFlights();
+
     }
 }
