@@ -3,7 +3,10 @@ package lz.model;
 import java.util.Set;
 
 public class CardsResponse {
-    private final Set<Card> cards;
+    private Set<Card> cards;
+
+    public CardsResponse() {
+    }
 
     public CardsResponse(Set<Card> cards) {
 	this.cards = cards;
@@ -13,4 +16,7 @@ public class CardsResponse {
 	return cards;
     }
 
+    public void setCards(Set<Card> cards) {
+	this.cards = cards;
+    }
 }

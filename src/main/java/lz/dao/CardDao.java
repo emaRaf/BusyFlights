@@ -27,7 +27,13 @@ public class CardDao {
 
     public List<Card> getCards(String sessionId) {
 	final List<Card> cardsBySession = cards.get(sessionId);
-	return cardsBySession != null ? cardsBySession : new ArrayList<>();
+	if (cardsBySession != null) {
+	    LOG.info(cardsBySession.size() + " cards available for session id: " + sessionId);
+	    return cardsBySession;
+	} else {
+	    LOG.info("no cards available for session id: " + sessionId);
+	    return new ArrayList<>();
+	}
     }
 
     public Map<String, List<Card>> getCards() {
@@ -43,12 +49,16 @@ public class CardDao {
 	    cards.put(sessionId, cardsBySessionId);
 	}
 
-	if (cardsBySessionId.contains(card)) {
+	if (cardsBySessionId.contains(card) || isCardNumberDuplicate(cardsBySessionId, card.getCardNumber())) {
 	    throw new CardException("card already existing");
 	} else {
 	    cardsBySessionId.add(card);
 	    LOG.info("added new card from " + card.getBankName() + ", current total: " + cardsBySessionId.size());
 	}
+    }
+
+    private boolean isCardNumberDuplicate(List<Card> cardsBySessionId, String cardNumber) {
+	return cardsBySessionId.stream().filter(c -> c.getCardNumber().equals(cardNumber)).count() > 0;
     }
 
     public void deleteCards(String sessionId) {

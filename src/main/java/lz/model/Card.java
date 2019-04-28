@@ -7,8 +7,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-
 public class Card implements Comparable<Card> {
     public Card() {
     }
@@ -29,8 +27,9 @@ public class Card implements Comparable<Card> {
     @Pattern(regexp = "([0-9]{4})-([0-9]{4})-([0-9]{4})-([0-9]{4})")
     private String cardNumber;
 
-    @NotNull(message = "expiryDate is mandatory")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MMM-yyyy")
+    // @NotNull(message = "expiryDate is mandatory")
+    // @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "MMM-yyyy")
+    // @DateTimeFormat(pattern = "MMM-yyyy")
     private Date expiryDate;
 
     public String getBankName() {

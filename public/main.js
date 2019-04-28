@@ -1,5 +1,13 @@
 $(document).ready(function () {
 
+	fire_ajax_submit();
+	
+	 $("#getcards").click(function (event) {
+	        //stop submit the form, we will post it manually.
+	        event.preventDefault();
+	        fire_ajax_submit();
+	    });
+	
     $("#search-form").submit(function (event) {
     	alert("actualli geting");
         //stop submit the form, we will post it manually.
@@ -17,7 +25,6 @@ function fire_ajax_submit() {
     search["username"] = $("#username").val();
 
     $("#btn-search").prop("disabled", true);
-alert("actualli geting");
     $.ajax({
         type: "GET",
         contentType: "application/json",
@@ -28,7 +35,7 @@ alert("actualli geting");
         timeout: 600000,
         success: function (data) {
 
-            var json = "<h4>Ajax Response</h4><pre>"
+            var json = "<h4>Cards List</h4><pre>"
                 + JSON.stringify(data, null, 4) + "</pre>";
             $('#feedback').html(json);
 

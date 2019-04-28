@@ -12,8 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,7 +40,7 @@ public class CardsController {
     @GetMapping(path = "/", produces = "application/json")
     public CardsResponse getCards(HttpServletRequest request) {
 	final String sessionId = request.getSession().getId();
-	CardService createCardService = serviceFactory.createCardService();
+	final CardService createCardService = serviceFactory.createCardService();
 	final List<Card> cards = createCardService.getCards(sessionId);
 	return createCardResponse(cards);
     }
@@ -52,8 +52,8 @@ public class CardsController {
 		cards.stream().map(cardMaskerService::maskCard).collect(Collectors.toCollection(TreeSet<Card>::new)));
     }
 
-    @PostMapping(path = "/", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> addCard(@Valid @RequestBody Card card, Errors errors, HttpServletRequest request) {
+    @PostMapping(path = "/")
+    public ResponseEntity<?> addCard(@Valid @ModelAttribute Card card, Errors errors, HttpServletRequest request) {
 	if (errors.hasErrors()) {
 	    return ResponseEntity.badRequest().body(createResult(null, errors));
 	}
@@ -80,8 +80,7 @@ public class CardsController {
 	    HttpServletRequest request) {
 	if (file.isEmpty()) {
 	    redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
-	    System.out.println("empty");
-	    return "redirect:uploadStatus";
+	    return "<script>window.location = '/'</script>";
 	}
 
 	final String sessionId = request.getSession().getId();
@@ -95,7 +94,7 @@ public class CardsController {
 	redirectAttributes.addFlashAttribute("message",
 		"You successfully uploaded '" + file.getOriginalFilename() + "'");
 
-	return "redirect:/uploadStatus";
+	return "<script>window.location = '/'</script>";
     }
 
     @PostMapping("/destroy")
@@ -106,6 +105,6 @@ public class CardsController {
 	LOG.info("deleting data for session id: " + sessionId);
 
 	cardService.deleteCards(sessionId);
-	return "redirect:/";
+	return "<script>window.location = '/'</script>";
     }
 }

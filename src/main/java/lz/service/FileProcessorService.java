@@ -26,8 +26,6 @@ public class FileProcessorService {
 		final Card card = rowMapper.mapRow(line);
 		rowValidator.accept(card);
 		rowConsumer.accept(card);
-//		cardValidatorService.validateCard(card);
-//		cardService.createCard(card, sessionId);
 	    }
 
 	} catch (final IOException e) {
@@ -46,7 +44,7 @@ public class FileProcessorService {
 	    final int attributeCount = Card.class.getDeclaredFields().length;
 	    final String[] recordAttributes = record.split(",");
 	    if (recordAttributes.length != attributeCount) {
-		return null;
+		return new Card();
 	    } else {
 		final DateFormat format = new SimpleDateFormat("MMM-yyyy");
 		try {
