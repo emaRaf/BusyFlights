@@ -5,11 +5,19 @@ import org.springframework.stereotype.Service;
 @Service
 public class ServiceFactory {
 
+    private final CardService cardService;
+    private final CardMaskerService cardMaskerService;
+
+    public ServiceFactory() {
+	cardService = new CardService();
+	cardMaskerService = new CardMaskerService();
+    }
+
     public CardService createCardService() {
-	return new CardService();
+	return cardService;
     }
 
     public CardMaskerService createCardMaskerService() {
-	return new CardMaskerService();
+	return cardMaskerService;
     }
 }

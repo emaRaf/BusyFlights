@@ -33,6 +33,7 @@ import lz.exception.CardException;
 import lz.model.Card;
 import lz.model.CardsResponse;
 import lz.model.Result;
+import lz.model.SessionComponent;
 import lz.service.CardMaskerService;
 import lz.service.CardService;
 import lz.service.ServiceFactory;
@@ -44,10 +45,23 @@ public class CardsController {
     @Autowired
     private ServiceFactory serviceFactory;
 
+    @Autowired
+    private SessionComponent sessionComponent;
+
     @GetMapping(path = "/", produces = "application/json")
     public CardsResponse getEmployees(HttpServletRequest request) {
 
+	checkSession(request);
+
+	final String sessionId = request.getSession().getId();
+	final List<Card> cards = serviceFactory.createCardService().getCards(sessionId);
+	return createCardResponse(cards);
+    }
+
+    private void checkSession(HttpServletRequest request) {
+
 	List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+	System.out.println("session id " + request.getSession().getId());
 	if (messages == null) {
 	    messages = new ArrayList<>();
 	    request.getSession().setAttribute("MY_SESSION_MESSAGES", messages);
@@ -58,8 +72,14 @@ public class CardsController {
 	System.out.println("session messages");
 	messages.forEach(System.out::println);
 
-	final List<Card> cards = serviceFactory.createCardService().getCards();
-	return createCardResponse(cards);
+	Integer sessionI = sessionComponent.getI();
+	if (sessionI == null) {
+	    sessionComponent.i = 0;
+	} else {
+	    sessionComponent.i = sessionI++;
+	}
+
+	System.out.println("session countuer " + sessionComponent.getI());
     }
 
     private CardsResponse createCardResponse(final List<Card> cards) {
@@ -70,7 +90,9 @@ public class CardsController {
     }
 
     @PostMapping(path = "/", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<?> addEmployee(@Valid @RequestBody Card card, Errors errors) {
+    public ResponseEntity<?> addEmployee(@Valid @RequestBody Card card, Errors errors, HttpServletRequest request) {
+
+	checkSession(request);
 
 	final Result result = new Result();
 	if (errors.hasErrors()) {
@@ -84,8 +106,9 @@ public class CardsController {
 	    throw new CardException("testing exception");
 	}
 
+	final String sessionId = request.getSession().getId();
 	final CardService createCardService = serviceFactory.createCardService();
-	createCardService.createCard(card);
+	createCardService.createCard(card, sessionId);
 	// cardDao.addCard(card);
 
 	result.setMessage("success");
@@ -100,7 +123,10 @@ public class CardsController {
     }
 
     @PostMapping("/upload") // //new annotation since 4.3
-    public String singleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
+    public String singleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes,
+	    HttpServletRequest request) {
+
+	checkSession(request);
 
 	if (file.isEmpty()) {
 	    redirectAttributes.addFlashAttribute("message", "Please select a file to upload");
@@ -109,13 +135,14 @@ public class CardsController {
 	}
 
 	final CardService cardService = serviceFactory.createCardService();
-
+	final String sessionId = request.getSession().getId();
 	try (BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
 	    String line;
 	    final CardRowMapper mapper = new CardRowMapper();
 	    while ((line = br.readLine()) != null) {
 		final Card card = mapper.mapRow(line);
-		cardService.createCard(card);
+
+		cardService.createCard(card, sessionId);
 	    }
 
 	    // Get the file and save it somewhere
@@ -137,11 +164,20 @@ public class CardsController {
     @PostMapping("/destroy")
     public String destroySession(HttpServletRequest request) {
 
+	checkSession(request);
+
 	System.out.println("clearing session");
+	System.out.println("session id " + request.getSession().getId());
+
+	final CardService cardService = serviceFactory.createCardService();
+	final String sessionId = request.getSession().getId();
+	cardService.deleteCards(sessionId);
+
 	final List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
 	messages.forEach(System.out::println);
 	request.getSession().invalidate();
 	System.out.println("cleeared session");
+	System.out.println("session id " + request.getSession().getId());
 	final List<String> messagesAfter = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
 
 	// messagesAfter.forEach(System.out::println);

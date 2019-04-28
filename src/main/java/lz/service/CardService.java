@@ -3,19 +3,15 @@ package lz.service;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
-
 import lz.dao.CardDAO;
 import lz.dao.Dao;
 import lz.model.Card;
 
-@Scope(value = "session")
-@Component(value = "todoService")
+//@Scope(value = "session")
+//@Component(value = "todoService")
 public class CardService {
 
-    @Autowired
+    // @Autowired
     private Dao<Card> todoDao;
     private Card todo = new Card();
 
@@ -51,12 +47,17 @@ public class CardService {
 	return todo;
     }
 
-    public void createCard(Card card) {
-	cardDao.addCard(card);
+    public void createCard(Card card, String sessionId) {
+	cardDao.addCard(card, sessionId);
 
     }
 
-    public List<Card> getCards() {
-	return cardDao.getCards();
+    public List<Card> getCards(String sessionId) {
+	return cardDao.getCards(sessionId);
+    }
+
+    public void deleteCards(String sessionId) {
+	cardDao.deleteCards(sessionId);
+
     }
 }
