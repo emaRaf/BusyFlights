@@ -18,12 +18,20 @@ public class CardDao {
     private final Map<String, List<Card>> cards;
 
     public CardDao() {
-	cards = new HashMap<>();
+	this(new HashMap<>());
+    }
+
+    public CardDao(Map<String, List<Card>> cards) {
+	this.cards = cards;
     }
 
     public List<Card> getCards(String sessionId) {
 	final List<Card> cardsBySession = cards.get(sessionId);
 	return cardsBySession != null ? cardsBySession : new ArrayList<>();
+    }
+
+    public Map<String, List<Card>> getCards() {
+	return cards;
     }
 
     public void addCard(Card card, String sessionId) {

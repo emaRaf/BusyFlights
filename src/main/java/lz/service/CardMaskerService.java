@@ -1,5 +1,6 @@
 package lz.service;
 
+import lz.exception.CardFormatException;
 import lz.model.Card;
 
 public class CardMaskerService {
@@ -11,6 +12,10 @@ public class CardMaskerService {
     }
 
     private String maskCardNumber(String cardNumber) {
+	if (cardNumber.length() < 5) {
+	    throw new CardFormatException("card number invalid: " + cardNumber);
+	}
+
 	return cardNumber.substring(0, 5) + MASK;
     }
 }

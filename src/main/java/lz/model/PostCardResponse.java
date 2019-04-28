@@ -1,10 +1,13 @@
 package lz.model;
 
-public class Result {
+public class PostCardResponse {
     private String message;
     private Card card;
 
-    public Result(Card card, String message) {
+    public PostCardResponse() {
+    }
+
+    public PostCardResponse(Card card, String message) {
 	this.message = message;
 	this.card = card;
     }
@@ -24,10 +27,4 @@ public class Result {
     public void setCard(Card card) {
 	this.card = card;
     }
-
-    public void setResult(Card card) {
-	this.card = card;
-
-    }
-
 }

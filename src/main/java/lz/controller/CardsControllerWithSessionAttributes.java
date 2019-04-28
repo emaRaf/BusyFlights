@@ -28,7 +28,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import lz.exception.CardException;
 import lz.model.Card;
 import lz.model.CardsResponse;
-import lz.model.Result;
+import lz.model.PostCardResponse;
 import lz.model.SessionComponent;
 import lz.service.CardMaskerService;
 import lz.service.CardService;
@@ -71,11 +71,11 @@ public class CardsControllerWithSessionAttributes {
 	return ResponseEntity.ok(createResult(card, null));
     }
 
-    private Result createResult(Card card, Errors errors) {
+    private PostCardResponse createResult(Card card, Errors errors) {
 	if (card != null) {
-	    return new Result(card, "success");
+	    return new PostCardResponse(card, "success");
 	} else if (errors != null) {
-	    return new Result(null,
+	    return new PostCardResponse(null,
 		    errors.getAllErrors().stream().map(x -> x.getDefaultMessage()).collect(Collectors.joining(",")));
 	}
 	return null;

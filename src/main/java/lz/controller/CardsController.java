@@ -1,12 +1,5 @@
 package lz.controller;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -27,14 +20,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import lz.exception.CardFormatException;
 import lz.model.Card;
 import lz.model.CardsResponse;
-import lz.model.Result;
-import lz.model.SessionComponent;
+import lz.model.PostCardResponse;
 import lz.service.CardMaskerService;
 import lz.service.CardService;
 import lz.service.CardValidatorService;
+import lz.service.FileProcessorService;
 import lz.service.ServiceFactory;
 
 @RestController
@@ -45,13 +37,11 @@ public class CardsController {
     @Autowired
     private ServiceFactory serviceFactory;
 
-    @Autowired
-    private SessionComponent sessionComponent;
-
     @GetMapping(path = "/", produces = "application/json")
     public CardsResponse getCards(HttpServletRequest request) {
 	final String sessionId = request.getSession().getId();
-	final List<Card> cards = serviceFactory.createCardService().getCards(sessionId);
+	CardService createCardService = serviceFactory.createCardService();
+	final List<Card> cards = createCardService.getCards(sessionId);
 	return createCardResponse(cards);
     }
 
@@ -75,11 +65,11 @@ public class CardsController {
 	return ResponseEntity.ok(createResult(card, null));
     }
 
-    private Result createResult(Card card, Errors errors) {
+    private PostCardResponse createResult(Card card, Errors errors) {
 	if (card != null) {
-	    return new Result(card, "success");
+	    return new PostCardResponse(card, "success");
 	} else if (errors != null) {
-	    return new Result(null,
+	    return new PostCardResponse(null,
 		    errors.getAllErrors().stream().map(x -> x.getDefaultMessage()).collect(Collectors.joining(",")));
 	}
 	return null;
@@ -94,34 +84,18 @@ public class CardsController {
 	    return "redirect:uploadStatus";
 	}
 
+	final String sessionId = request.getSession().getId();
 	final CardService cardService = serviceFactory.createCardService();
 	final CardValidatorService cardValidatorService = serviceFactory.createCardValidatorService();
 	final FileProcessorService fileProcessorService = serviceFactory.createFileProcessorService();
 
-	final String sessionId = request.getSession().getId();
-	final CardRowMapper mapper = new CardRowMapper();
-	String line;
-	try (BufferedReader br = createBufferedReader(file)) {
-	    while ((line = br.readLine()) != null) {
-		final Card card = mapper.mapRow(line);
-		cardValidatorService.validateCard(card);
-		cardService.createCard(card, sessionId);
-	    }
-
-	} catch (final IOException e) {
-	    throw new CardFormatException(e);
-	}
-
-	// fileProcessorService.processFile(file);
+	fileProcessorService.processFile(file, cardValidatorService::validateCard,
+		c -> cardService.createCard(c, sessionId));
 
 	redirectAttributes.addFlashAttribute("message",
 		"You successfully uploaded '" + file.getOriginalFilename() + "'");
 
 	return "redirect:/uploadStatus";
-    }
-
-    private BufferedReader createBufferedReader(MultipartFile file) throws IOException {
-	return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())));
     }
 
     @PostMapping("/destroy")
@@ -133,23 +107,5 @@ public class CardsController {
 
 	cardService.deleteCards(sessionId);
 	return "redirect:/";
-    }
-
-    private static class CardRowMapper implements RowMapper<Card> {
-	@Override
-	public Card mapRow(String record) {
-	    final int attributeCount = Card.class.getDeclaredFields().length;
-	    final String[] recordAttributes = record.split(",");
-	    if (recordAttributes.length != attributeCount) {
-		return null;
-	    } else {
-		final DateFormat format = new SimpleDateFormat("MMM-yyyy");
-		try {
-		    return new Card(recordAttributes[0], recordAttributes[1], format.parse(recordAttributes[2]));
-		} catch (final ParseException e) {
-		    throw new CardFormatException("invalid date");
-		}
-	    }
-	}
     }
 }
