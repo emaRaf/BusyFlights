@@ -13,6 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import lz.exception.CardException;
+import lz.exception.CardFormatException;
 import lz.exception.ErrorDetails;
 
 @ControllerAdvice
@@ -20,16 +21,22 @@ import lz.exception.ErrorDetails;
 public class CustomizedResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(CardException.class)
-    public final ResponseEntity<ErrorDetails> handleUserNotFoundException(CardException ex, WebRequest request) {
+    public final ResponseEntity<ErrorDetails> handleCardException(CardException ex, WebRequest request) {
 	final ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
 	return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
-    
+
     @ExceptionHandler(MultipartException.class)
     public String handleError1(MultipartException e, RedirectAttributes redirectAttributes) {
 
-        redirectAttributes.addFlashAttribute("message", e.getCause().getMessage());
-        return "redirect:/uploadStatus";
+	redirectAttributes.addFlashAttribute("message", e.getCause().getMessage());
+	return "redirect:/uploadStatus";
 
+    }
+
+    @ExceptionHandler(CardFormatException.class)
+    public ResponseEntity<ErrorDetails> handleCardFormatException(CardException ex, WebRequest request) {
+	final ErrorDetails errorDetails = new ErrorDetails(new Date(), ex.getMessage(), request.getDescription(false));
+	return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 }

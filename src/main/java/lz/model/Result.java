@@ -4,13 +4,9 @@ public class Result {
     private String message;
     private Card card;
 
-    public Result(String message, Card card) {
+    public Result(Card card, String message) {
 	this.message = message;
 	this.card = card;
-    }
-
-    public Result() {
-	// TODO Auto-generated constructor stub
     }
 
     public String getMessage() {

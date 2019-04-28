@@ -12,37 +12,18 @@ import lz.exception.CardException;
 import lz.model.Card;
 
 @Repository
-public class CardDAO {
-    private final static Logger LOG = Logger.getLogger(CardDAO.class.getName());
+public class CardDao {
+    private final static Logger LOG = Logger.getLogger(CardDao.class.getName());
 
-    private Map<String, List<Card>> cards;
-    private List<Card> allCards;
+    private final Map<String, List<Card>> cards;
 
-    public CardDAO() {
+    public CardDao() {
 	cards = new HashMap<>();
-	allCards = new ArrayList<>();
-    }
-
-    public Map<String, List<Card>> getCards() {
-	return cards;
-    }
-
-    public void setCards(Map<String, List<Card>> cards) {
-	this.cards = cards;
-    }
-
-    public List<Card> getAllCards() {
-	return allCards;
-    }
-
-    public void setAllCards(List<Card> allCards) {
-	this.allCards = allCards;
     }
 
     public List<Card> getCards(String sessionId) {
 	final List<Card> cardsBySession = cards.get(sessionId);
 	return cardsBySession != null ? cardsBySession : new ArrayList<>();
-//	return allCards;
     }
 
     public void addCard(Card card, String sessionId) {
@@ -50,7 +31,6 @@ public class CardDAO {
 
 	if (cardsBySessionId == null) {
 	    LOG.info("creating new card list for session id: " + sessionId);
-
 	    cardsBySessionId = new ArrayList<>();
 	    cards.put(sessionId, cardsBySessionId);
 	}
@@ -61,10 +41,6 @@ public class CardDAO {
 	    cardsBySessionId.add(card);
 	    LOG.info("added new card from " + card.getBankName() + ", current total: " + cardsBySessionId.size());
 	}
-
-	cards.replace(sessionId, cardsBySessionId);
-
-	allCards.add(card);
     }
 
     public void deleteCards(String sessionId) {

@@ -9,7 +9,6 @@ import javax.validation.constraints.Size;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-//@Entity
 public class Card implements Comparable<Card> {
     public Card() {
     }
@@ -65,7 +64,14 @@ public class Card implements Comparable<Card> {
 
     @Override
     public int compareTo(Card card) {
-	return card.getExpiryDate().compareTo(expiryDate);
+	final int dateCheck = card.getExpiryDate().compareTo(expiryDate);
+	final int bankCheck = card.getBankName().compareTo(bankName);
+	final int numberCheck = card.getCardNumber().compareTo(cardNumber);
+	return dateCheck == 0 ? secondaryChecks(bankCheck, numberCheck) : dateCheck;
+    }
+
+    private int secondaryChecks(int bankCheck, int numberCheck) {
+	return bankCheck == 0 ? numberCheck : bankCheck;
     }
 
     @Override

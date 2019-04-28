@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,26 +21,22 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import lz.exception.CardFormatException;
+import lz.exception.CardException;
 import lz.model.Card;
 import lz.model.CardsResponse;
 import lz.model.Result;
 import lz.model.SessionComponent;
 import lz.service.CardMaskerService;
 import lz.service.CardService;
-import lz.service.CardValidatorService;
 import lz.service.ServiceFactory;
 
-@RestController
-@RequestMapping(path = "api/cards")
-public class CardsController {
-    private final static Logger LOG = Logger.getLogger(CardsController.class.getName());
+//@RestController
+//@RequestMapping(path = "api/cards")
+public class CardsControllerWithSessionAttributes {
 
     @Autowired
     private ServiceFactory serviceFactory;
@@ -95,46 +91,79 @@ public class CardsController {
 	}
 
 	final CardService cardService = serviceFactory.createCardService();
-	final CardValidatorService cardValidatorService = serviceFactory.createCardValidatorService();
-	final FileProcessorService fileProcessorService = serviceFactory.createFileProcessorService();
-
 	final String sessionId = request.getSession().getId();
-	final CardRowMapper mapper = new CardRowMapper();
-	String line;
-	try (BufferedReader br = createBufferedReader(file)) {
+	try (BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())))) {
+	    String line;
+	    final CardRowMapper mapper = new CardRowMapper();
 	    while ((line = br.readLine()) != null) {
 		final Card card = mapper.mapRow(line);
-		cardValidatorService.validateCard(card);
+
 		cardService.createCard(card, sessionId);
 	    }
 
+	    // Get the file and save it somewhere
+//	    final byte[] bytes = file.getBytes();
+//	    System.out.println("got size " + bytes.length);
+	    // Path path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename());
+	    // Files.write(path, bytes);
+
+	    redirectAttributes.addFlashAttribute("message",
+		    "You successfully uploaded '" + file.getOriginalFilename() + "'");
+
 	} catch (final IOException e) {
-	    throw new CardFormatException(e);
+	    e.printStackTrace();
 	}
-
-	// fileProcessorService.processFile(file);
-
-	redirectAttributes.addFlashAttribute("message",
-		"You successfully uploaded '" + file.getOriginalFilename() + "'");
 
 	return "redirect:/uploadStatus";
     }
 
-    private BufferedReader createBufferedReader(MultipartFile file) throws IOException {
-	return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(file.getBytes())));
-    }
-
     @PostMapping("/destroy")
     public String destroySession(HttpServletRequest request) {
+
+//	checkSession(request);
+
+	System.out.println("clearing session");
+	System.out.println("session id " + request.getSession().getId());
+
 	final CardService cardService = serviceFactory.createCardService();
 	final String sessionId = request.getSession().getId();
-
-	LOG.info("deleting data for session id: " + sessionId);
-
 	cardService.deleteCards(sessionId);
+
+	final List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+	messages.forEach(System.out::println);
+	request.getSession().invalidate();
+	System.out.println("cleeared session");
+	System.out.println("session id " + request.getSession().getId());
+	final List<String> messagesAfter = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+
+	// messagesAfter.forEach(System.out::println);
+
 	return "redirect:/";
     }
 
+    /*
+     * public void readCsv() { final String csvFile =
+     * "/Users/mkyong/csv/country.csv"; String line = ""; final String cvsSplitBy =
+     * ",";
+     *
+     * // try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+     * try (BufferedReader br = new BufferedReader(new
+     * ByteArrayInputStream(content))) {
+     *
+     *
+     * new ByteArrayInputStream(content) while ((line = br.readLine()) != null) {
+     *
+     * // use comma as separator final String[] country = line.split(cvsSplitBy);
+     *
+     * System.out.println("Country [code= " + country[4] + " , name=" + country[5] +
+     * "]");
+     *
+     * }
+     *
+     * } catch (final IOException e) { e.printStackTrace(); }
+     *
+     * }
+     */
     private static class CardRowMapper implements RowMapper<Card> {
 	@Override
 	public Card mapRow(String record) {
@@ -147,9 +176,34 @@ public class CardsController {
 		try {
 		    return new Card(recordAttributes[0], recordAttributes[1], format.parse(recordAttributes[2]));
 		} catch (final ParseException e) {
-		    throw new CardFormatException("invalid date");
+		    throw new CardException("invalid date");
 		}
 	    }
 	}
     }
+
+    private void checkSession(HttpServletRequest request) {
+
+	List<String> messages = (List<String>) request.getSession().getAttribute("MY_SESSION_MESSAGES");
+	System.out.println("session id " + request.getSession().getId());
+	if (messages == null) {
+	    messages = new ArrayList<>();
+	    request.getSession().setAttribute("MY_SESSION_MESSAGES", messages);
+	}
+	messages.add("new");
+	request.getSession().setAttribute("MY_SESSION_MESSAGES", messages);
+
+	System.out.println("session messages");
+	messages.forEach(System.out::println);
+
+	Integer sessionI = sessionComponent.getI();
+	if (sessionI == null) {
+	    sessionComponent.i = 0;
+	} else {
+	    sessionComponent.i = sessionI++;
+	}
+
+	System.out.println("session countuer " + sessionComponent.getI());
+    }
+
 }
